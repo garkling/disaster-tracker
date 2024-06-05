@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Disaster alert</title>
+    <style>
+        table, td, th {
+            border-collapse: separate;
+            border: 1px solid black;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width:60%; ; margin:auto;">
+        <div style="text-align:left; overflow: hidden;">
+            <h2>Hi, {{ alert.recipient }}</h2>
+            <h5>There are active disaster/s near the <a rel="stylesheet" href="{{ alert.event.link }}">place</a> you are planning to travel in next weeks!</h5>
+
+        </div>
+        <div style="text-align: left">
+
+            <h3>Details:</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th >#</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Categories</th>
+                        <th>Location</th>
+                        <th>Last update date</th>
+                        <th>Magnitude</th>
+                        <th>Link*</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in alert.disasters %}
+                        <tr>
+                            <td style="padding: 5px;">{{ loop.index }}</td>
+                            <td style="padding: 5px;">{{ d["name"] }}</td>
+                            <td style="padding: 5px;">{{ d["description"] }}</td>
+                            <td style="padding: 5px;">
+                                {% for c in d["categories"] %}
+                                    <p>{{ c["title"] }}</p>
+                                {% endfor %}
+                            </td>
+                            <td style="padding: 5px;">({{ d["lat"]}} {{d["lon"] }})</td>
+                            <td style="padding: 5px;">{{ d["most_recent_date"] }}</td>
+                            <td style="padding: 5px;">{% if d["magnitude"] %}{{d["magnitude"]}}{% else %} - {% endif %}</td>
+                            <td style="padding: 5px;"><a href="https://google.com/search?q={{ d['name'] }}">Link</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <small><strong>*I'll try to give you Google links so you check, but not promise if they are 100% relevant!</strong></small>
+
+        </div>
+    </div>
+</body>
+</html>

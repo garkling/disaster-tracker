@@ -1,0 +1,102 @@
+networks:
+  dt-network:
+    name: dt-network
+
+services:
+
+  dt:
+    build: app
+    hostname: web_server
+    restart: on-failure
+
+    ports:
+      - "127.0.0.1:${API_PORT}:${API_PORT}"
+
+    env_file:
+      - api/.env
+
+    networks:
+      dt-network:
+
+  event-storage:
+    image: mongo:7.0
+    hostname: event_storage
+    restart: on-failure
+
+    volumes:
+#      - mongo_data:/data/db
+      - ./infra/mongod.conf:/etc/mongo/mongod.conf
+      - ./infra/mongodb.key:/etc/mongo/keys/mongodb.key:ro
+      - ./infra/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
+    ports:
+      - "127.0.0.1:${MONGO_PORT}:27017"
+
+    command: --bind_ip localhost,event_storage --config /etc/mongo/mongod.conf
+
+    environment:
+      MONGO_DATABASE:             ${MONGO_DATABASE}
+      MONGO_DB_USER:              ${MONGO_DB_USER}
+      MONGO_DB_PASSWORD:          ${MONGO_DB_PASSWORD}
+      MONGO_INITDB_DATABASE:      ${MONGO_INITDB_DATABASE}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+
+
+    networks:
+      dt-network:
+
+
+  kv-storage:
+    image: redis:7
+    hostname: kv_storage
+    restart: on-failure
+
+    volumes:
+#      - redis_data:/data
+      - ./infra/redis.conf:/etc/redis/redis.conf
+      - ./infra/redis-start.sh:/redis-start.sh
+
+    entrypoint: /redis-start.sh
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_USERNAME: ${REDIS_USERNAME}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+    networks:
+      dt-network:
+
+
+  celery-worker:
+    build: celery
+    image: dt-worker
+    hostname: celery_worker
+
+    command: celery -A tasks worker --loglevel=INFO --concurrency=1
+
+    networks:
+      dt-network:
+
+    depends_on:
+      - kv-storage
+
+  celery-beat:
+    build: celery
+    image: dt-scheduler
+    hostname: celery_beat
+
+    command: celery -A tasks beat --loglevel=INFO
+
+    depends_on:
+      - kv-storage
+
+    networks:
+      dt-network:
+
+#volumes:
+#  mongo_data:
+#  redis_data:
