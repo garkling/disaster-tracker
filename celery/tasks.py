@@ -11,7 +11,7 @@ app = Celery("tasks", track_started=True)
 
 app.conf.beat_schedule = {
     "check_calendar_events": {
-        "task": "tasks.check_calendar_events",
+        "task": "tasks.scheduled_check",
         "schedule": crontab(minute="0", hour="*/12")
     },
     "eonet_updates": {

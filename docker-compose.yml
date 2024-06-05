@@ -13,7 +13,7 @@ services:
       - "127.0.0.1:${API_PORT}:${API_PORT}"
 
     env_file:
-      - api/.env
+      - app/.env
 
     networks:
       dt-network:
