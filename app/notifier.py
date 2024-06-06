@@ -21,8 +21,6 @@ class AlertNotifier:
 
     @as_result(HttpError)
     def notify(self, alert: DisasterAlert) -> str:
-        creds, _ = google.auth.default()
-
         rendered = self._render_content(alert)
         message = MIMEText(rendered, "html")
 
